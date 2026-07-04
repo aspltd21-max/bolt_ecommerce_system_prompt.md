@@ -1,0 +1,1 @@
+# bolt_ecommerce_system_prompt.md
