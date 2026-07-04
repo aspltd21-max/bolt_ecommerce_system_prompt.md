@@ -1,0 +1,23 @@
+Add the following email-related configuration to Aditya E Mart:
+
+=====================================================
+1. PUBLIC CONTACT / SUPPORT EMAIL
+=====================================================
+- Display "a.s.p.ltd21@gmail.com" as the official customer support email in: site footer, Contact Us page/section, and order confirmation emails/receipts ("For any queries, contact us at a.s.p.ltd21@gmail.com").
+- Store this as a configurable value in a `store_settings` table (key-value: e.g. support_email, support_phone) rather than hardcoding it in multiple components, so it can be changed later from the admin panel without a code change.
+
+=====================================================
+2. ADMIN LOGIN ACCOUNT
+=====================================================
+- Set up "a.s.p.ltd21@gmail.com" as the first admin account: create a Supabase Auth user with this email (admin sets the password directly in Supabase Auth or via the sign-up flow), then insert/update the corresponding row in `profiles` with role = 'admin'.
+- Do NOT hardcode this email as a special case in application logic (e.g. no "if email === 'a.s.p.ltd21@gmail.com' then admin" checks in code) — admin access must come only from the `profiles.role = 'admin'` field, checked via Supabase Row Level Security. This keeps admin rights properly revocable/transferable later.
+
+=====================================================
+3. AI AGENT — GMAIL INBOX INTEGRATION (for customer email replies)
+=====================================================
+- Add an Edge Function `gmail-inbox-sync` that connects to the Gmail API for a.s.p.ltd21@gmail.com using OAuth2 (Google Cloud project credentials — client_id, client_secret, and refresh_token stored as Supabase secrets, never in frontend code).
+- This function should: periodically (or via webhook/Pub-Sub push if available) fetch new unread emails sent to a.s.p.ltd21@gmail.com, create a row in `customer_queries` (channel = 'email', subject, message = email body), and call the `ai-customer-service-agent` function to draft a reply (ai_response field) — but do NOT auto-send the reply. It must appear in the admin's "AI Customer Service" tab for review/edit/approval before sending.
+- Add a "Send Reply" action in that admin tab that, once approved, calls the Gmail API send endpoint to actually reply from a.s.p.ltd21@gmail.com.
+
+IMPORTANT SETUP NOTE (cannot be done by Bolt alone — needs manual one-time setup by the store owner):
+Gmail API access requires creating a project in Google Cloud Console, enabling the Gmail API, creating OAuth2 credentials, and completing the OAuth consent flow once to get a refresh_token for a.s.p.ltd21@gmail.com. Build the Edge Function to accept these as environment variables (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN) so it's ready to activate as soon as those are supplied — do not fake or simulate email fetching with placeholder data.
