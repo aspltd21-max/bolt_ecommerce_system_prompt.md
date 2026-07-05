@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 /*
  * Aditya E Mart — Supabase Bulk Product Import Seed
  * =====================================================
@@ -8,7 +10,7 @@
  * 4. Handles needs_review flag (is_active=false for REVIEW items)
  *
  * USAGE:
- *   Set env vars: SUPABASE_URL, SUPABASE_ANON_KEY (or service role key for bulk ops)
+ *   Set env vars in .env: SUPABASE_URL, SUPABASE_ANON_KEY
  *   npm install csv-parse @supabase/supabase-js
  *   node seed_products_supabase.js
  */
@@ -17,8 +19,13 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gxdbqdybudxszbexjtgo.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZGJxZHlidWR4c3piZXhqdGdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODMxMjMsImV4cCI6MjA5ODc1OTEyM30.M-jnlIfd44Via8lehkMVtYbqK99m1XmkTYwPRKogaG4';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('❌ Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env file');
+  process.exit(1);
+}
 
 const INPUT_CSV = './products_import_template.csv';
 
@@ -49,6 +56,12 @@ async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   console.log('📖 Reading products_import_template.csv...');
+  
+  if (!fs.existsSync(INPUT_CSV)) {
+    console.error(`❌ File not found: ${INPUT_CSV}`);
+    process.exit(1);
+  }
+
   const csvContent = fs.readFileSync(INPUT_CSV, 'utf-8');
   const rows = parse(csvContent, { columns: true, skip_empty_lines: true });
 
@@ -103,6 +116,11 @@ async function main() {
 
   console.log(`\n📊 Generated ${products.length} products (${skipped} skipped)\n`);
 
+  if (products.length === 0) {
+    console.warn('⚠️  No products to import');
+    return;
+  }
+
   // Bulk insert products
   try {
     console.log('💾 Inserting products into Supabase...');
@@ -111,7 +129,7 @@ async function main() {
       .insert(products);
 
     if (productsError) {
-      console.error('❌ Products insert error:', productsError);
+      console.error('❌ Products insert error:', productsError.message);
       return;
     }
     console.log(`✅ ${products.length} products inserted`);
@@ -128,7 +146,7 @@ async function main() {
       .insert(offers);
 
     if (offersError) {
-      console.error('❌ Offers insert error:', offersError);
+      console.error('❌ Offers insert error:', offersError.message);
       return;
     }
     console.log(`✅ ${offers.length} offers inserted`);
