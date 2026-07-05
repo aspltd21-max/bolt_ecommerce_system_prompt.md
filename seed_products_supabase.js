@@ -17,8 +17,8 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_KEY';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gxdbqdybudxszbexjtgo.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZGJxZHlidWR4c3piZXhqdGdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODMxMjMsImV4cCI6MjA5ODc1OTEyM30.M-jnlIfd44Via8lehkMVtYbqK99m1XmkTYwPRKogaG4';
 
 const INPUT_CSV = './products_import_template.csv';
 
